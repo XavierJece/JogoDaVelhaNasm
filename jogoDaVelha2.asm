@@ -32,8 +32,8 @@ espaco 	 	db " ", 0
 tracos 	 	db "|---|---|---|", 0
 tabuleiro	TIMES 10 dd 0  ; Declaração do vetor 
 errou	 	db  " Voce digitou errado, tente novamente!", 0
-deuCampeao	db  " O CAMPEAO FOI: ", 0
-
+deuCampeao	db  " O CAMPEAO FOI :) => ", 0
+deuVelha	db	" DEU VELHA NINGUEM GANHOU :(", 0
 
 segment .bss
 ; Dados são inicializados, são colocados, no segment .bss
@@ -315,11 +315,6 @@ _aleteraJogador2:
 ; 	jmp		_apresentaTabuleiro
 
 _continuaJogo:
-	call	print_nl
-	call	print_nl
-	mov		eax,	sTabuleiro
-	call	print_string
-	call	print_nl
 
 	mov		eax,	4
 	mov		[flag],	eax
@@ -338,19 +333,12 @@ _verificaColuna1:
 	mov		esi, tabuleiro
 
 	; Função para verificar a Primeira Coluna (0 3 6)
-	; Verificação de Todas as Posições tem peça
-	cmp		eax, [esi+ebx]		; Vendo se na Posição 0 não tem peça
-	je		_continuaJogo		; Posição Vazia
 	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 0
-	add		ebx, 12				; Deixando o EBX na posição certa
+	add		ebx, 12				; Deixando o EBX na proxima posição
 
-	cmp		eax, [esi+ebx]		;Vendo se na Posição 3 não tem peça
-	je		_continuaJogo		; Posição Vazia
 	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 3
-	add		ebx, 12	
+	add		ebx, 12				; Deixando o EBX na proxima posição
 
-	cmp		eax, [esi+ebx]		;Vendo se na Posição 6 não tem peça
-	je		_continuaJogo		; Posição Vazia
 	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 6
 
 	; Verificação se Todas as Posições tem a mesma Peça
@@ -369,20 +357,13 @@ _verificaColuna2:
 	mov		edx, 0
 	mov		esi, tabuleiro
 
-	; Função para verificar a Primeira Coluna (1 4 7)
-	; Verificação de Todas as Posições tem peça
-	cmp		eax, [esi+ebx]		; Vendo se na Posição 1 não tem peça
-	je		_continuaJogo		; Posição Vazia
+	; Função para verificar a Segunda Coluna (1 4 7)
 	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 1
-	add		ebx, 12				; Deixando o EBX na posição certa
+	add		ebx, 12				; Deixando o EBX na proxima posição
 
-	cmp		eax, [esi+ebx]		;Vendo se na Posição 4 não tem peça
-	je		_continuaJogo		; Posição Vazia
-	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 43
-	add		ebx, 12	
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 4
+	add		ebx, 12				; Deixando o EBX na proxima posição
 
-	cmp		eax, [esi+ebx]		;Vendo se na Posição 7 não tem peça
-	je		_continuaJogo		; Posição Vazia
 	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 7
 
 	; Verificação se Todas as Posições tem a mesma Peça
@@ -400,25 +381,18 @@ _verificaColuna3:
 	mov		edx, 0
 	mov		esi, tabuleiro
 
-	; Função para verificar a Primeira Coluna (2 5 8)
-	; Verificação de Todas as Posições tem peça
-	cmp		eax, [esi+ebx]		; Vendo se na Posição 2 não tem peça
-	je		_continuaJogo		; Posição Vazia
+	; Função para verificar a Terceira Coluna (2 5 8)
 	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 2
-	add		ebx, 12				; Deixando o EBX na posição certa
+	add		ebx, 12				; Deixando o EBX na proxima posição
 
-	cmp		eax, [esi+ebx]		;Vendo se na Posição 5 não tem peça
-	je		_continuaJogo		; Posição Vazia
 	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 5
-	add		ebx, 12	
+	add		ebx, 12				; Deixando o EBX na proxima posição
 
-	cmp		eax, [esi+ebx]		;Vendo se na Posição 8 não tem peça
-	je		_continuaJogo		; Posição Vazia
 	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 8
 
 	; Verificação se Todas as Posições tem a mesma Peça
 	cmp		ecx, edx			;Vendo se a Posição 2 5 tem peças =
-	jne		_continuaJogo	;Peças !=
+	jne		_verificaVelha	;Peças !=
 
 	cmp		ecx, eax			;Vendo se a Posição 2 8 tem peças =
 	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
@@ -427,8 +401,45 @@ _verificaColuna3:
 ; _verificaLinha2:
 ; _verificaLinha3:
 
-_campeao:
+_verificaVelha:
+	mov		eax, 0
+	mov		ebx, 0				;Número na Posição
+	mov		ecx, 0				; Fim do laço
+	mov		esi, tabuleiro
 
+_whileVelha:
+	inc 	ecx
+	
+	cmp		eax,	[esi+ebx] 		; Compara o valor do vetor que o ESI esta apontando com o registrador EAX (0).
+	je 		_continuaJogo			; Se Igual Continua
+	
+	add 	ebx,	4  				; Adiciona 4 para o ebx, posteriormente fazendo que o ESI aponte para a proxima posicao do vetor.	
+
+	cmp		ecx,	9 	   			; Compara se ECX e igual a 9.
+	je		_deuVelha 				; Se sim, GAME OWER.
+
+	jmp 	_whileVelha 
+
+_deuVelha:
+	call	print_nl
+	mov		eax,	deuVelha
+	call	print_string
+	call	print_nl
+	call	print_nl
+	
+	mov 	eax,	0
+	mov		[flag],	eax
+
+	jmp		_apresentaTabuleiro
+
+;***************Campeeão****************************
+_campeao:
+	;Verificção se Não é o 0 como Campeão
+	mov		eax,	0
+	cmp		ecx,	eax
+	je		_continuaJogo
+
+	;Apresentação
 	call	print_nl
 	mov		eax,	deuCampeao
 	call	print_string
