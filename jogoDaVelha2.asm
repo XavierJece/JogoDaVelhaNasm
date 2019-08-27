@@ -25,17 +25,21 @@ segment  .data
 intro		db " Esse é um jogo da memoria feito em Nasm, para testar o conhecimento", 0
 jogador1   	db "Jogador 1 Digite posicao que deseja jogar: ", 0       ; don't forget nul terminator
 jogador2   	db "Jogador 2 Digite posicao que deseja jogar: ", 0       ; don't forget nul terminator
+sTabuleiro	db "Tabuleiro: ", 0
 posicoes	db "POSICOES: ", 0
 barra 	 	db "| ", 0
 espaco 	 	db " ", 0
 tracos 	 	db "|---|---|---|", 0
 tabuleiro	TIMES 10 dd 0  ; Declaração do vetor 
 errou	 	db  " Voce digitou errado, tente novamente!", 0
+deuCampeao	db  " O CAMPEAO FOI: ", 0
+
 
 segment .bss
 ; Dados são inicializados, são colocados, no segment .bss
-flag	resd 1 ; Variavel para controle de subprogramas.
-posicao	resd 1 ; Variavel para escolha da posicao do jogador
+flag			resd 1 ; Variavel para controle de subprogramas.
+posicao			resd 1 ; Variavel para escolha da posicao do jogador
+jogadorJogando	resd 1 ; Variavel para controle dos Jogadores
 
 segment .text
 		global _asm_main	
@@ -49,12 +53,15 @@ _asm_main:
 
 ;Para deixar o Tabuleiro Inicialmente zerado -------------------------------------
 _inicia_tabuleiro:
-		mov 	esi, tabuleiro  ; ESI aponta para vetor da matriz1.
-		mov 	edx, 0 ; contador do WHILE.
-		mov		ebx, 0 ; Indice do vetor.
+		mov 	esi,	tabuleiro			; ESI aponta para vetor da matriz1.
+		mov 	edx,	0					; contador do WHILE.
+		mov		ebx,	0					; Indice do vetor.
 		
-		mov 	eax, 4 ; Flag	=	4	=>	_intro
-		mov 	[flag], eax ; Flag recebe 4.
+		mov 	eax,	4					; Flag	=	4	=>	_intro
+		mov 	[flag],	eax 				; Flag recebe 4.
+
+		mov		eax,	1					; JogadorJogando	=>	1
+		mov		[jogadorJogando],	eax		; JogadorJogando	=>	1
 		
 _whileMatrixOne: 	; Loop para receber os valores da  primeira matriz.
 		inc 	edx  ; Incrementa contador
@@ -68,24 +75,20 @@ _whileMatrixOne: 	; Loop para receber os valores da  primeira matriz.
 		jnge 	_whileMatrixOne ; Volta para a funcao _whileMatrixOne.
 		
 		call 	print_nl ; Pular linha.
-		
 		jmp 	_apresentaTabuleiro ; Pula para a funcao de apresentar a matriz.
 
 
 ;Apresentando a INTRO -------------------------------------
 _intro:
 
-	mov		eax, posicoes
-	call	print_string
-	call	print_nl
-
-	mov 	eax, 1 ; Flag	=	1	=>	_jogador1
-	mov 	[flag], eax ; Flag recebe 1.
+	mov 	eax,	[jogadorJogando]				; Flag	=	jogadorJogando	=>	_jogador1
+	mov 	[flag],	eax 							; Flag recebe jogadorJogando.
 
 	jmp		_apresentacaoPosicao
 
 ; Jogar -------------------------------------
 _jogador1:
+	call	print_nl
 	mov		eax, jogador1	; Movendo Variavel para o regfistrador EAx
 	call	print_string	; Apresentando para o usuário 
 	
@@ -102,6 +105,7 @@ _jogador1:
 
 
 _jogador2:
+	call	print_nl
 	mov		eax, jogador2	; Movendo Variavel para o regfistrador EAx
 	call	print_string	; Apresentando para o usuário 
 	
@@ -138,6 +142,10 @@ _apresentaTabuleiro: ; Sub programa de apresentacao das matrizes.
 	mov		ebx, 0 ; EBX sera usado como indice.
 	mov 	edx, 0 ; EDX sera usado para controlar quando pular linha para a apresentacao da matriz.
 	
+	mov		eax,	sTabuleiro
+	call	print_string
+	call	print_nl
+
 	mov 	eax, tracos 
 	call 	print_string 		  		; Imprime tracos.	
 	call 	print_nl
@@ -187,6 +195,11 @@ _apresentacaoPosicao: ; Sub programa de apresentacao das matrizes.
 	mov 	ecx, 0 ; ECX contador para o loop.
 	mov 	edx, 0 ; EDX sera usado para controlar quando pular linha para a apresentacao da matriz.
 
+	call	print_nl
+	mov		eax,	posicoes
+	call	print_string
+	call	print_nl
+
 	mov 	eax, tracos 
 	call 	print_string 		  		; Imprime tracos.	
 	call 	print_nl
@@ -223,7 +236,7 @@ _pulaLinhaP: ; Sub programa para pular linha na apresentacao da matriz
 	call 	print_nl 			  		; pula linha.
 	
 	cmp		ecx, 9 	   ; Compara se EDX e igual a 3.
-	jge		_verificaFlag ; Se sim, encerrar programa
+	jge		_verificaFlag ; Se sim, encerrar SUBprograma
 
 	jmp 	_whileApresentaPosicao 	; Volta para o sub programa _compara.
 
@@ -231,9 +244,9 @@ _pulaLinhaP: ; Sub programa para pular linha na apresentacao da matriz
 _verificarEntrada: 
 
 	; Verificando ver jogo
-	mov		eax,	9
+	mov		eax,	-1
 	cmp		eax,	[posicao]
-	je		_verJogo
+	je		_terminou
 
 	; Verificando se a posição é menor a Zero
 	mov		eax,	0
@@ -255,7 +268,6 @@ _verificarEntrada:
 
 	mov 	ecx,	1
 	mov		eax,	[esi+ebx]
-	call	print_int
 	cmp 	eax,	ecx
 	jge		_apresentarError
 	jmp		_addPeca
@@ -280,22 +292,156 @@ _addPeca:
 	
 _aleteraJogador1:
 	mov		eax,	2
-	mov		[flag], eax
+	mov		[jogadorJogando], eax
+
+	mov		eax, 6
+	mov		[flag],	eax
 
 	jmp		_verificaFlag
 
 _aleteraJogador2:
 	mov		eax,	1
-	mov		[flag], eax
+	mov		[jogadorJogando], eax
+
+	mov		eax, 6
+	mov		[flag],	eax
 
 	jmp		_verificaFlag
+; ----------------Apresentação do Jogo-----------------------
+; _verJogo:
+; 	; mov		eax,	0
+; 	; mov		[flag], eax
 
-_verJogo:
-	; mov		eax,	0
-	; mov		[flag], eax
+; 	jmp		_apresentaTabuleiro
+
+_continuaJogo:
+	call	print_nl
+	call	print_nl
+	mov		eax,	sTabuleiro
+	call	print_string
+	call	print_nl
+
+	mov		eax,	4
+	mov		[flag],	eax
 
 	jmp		_apresentaTabuleiro
 
+
+; ----------------verifica Fim De Jogo-----------------------
+_verificaColuna1:
+
+	; Inicializando Registradores para fazer a comparação
+	mov		eax, 0
+	mov		ebx, 0				;Número na Posição 0
+	mov		ecx, 0
+	mov		edx, 0
+	mov		esi, tabuleiro
+
+	; Função para verificar a Primeira Coluna (0 3 6)
+	; Verificação de Todas as Posições tem peça
+	cmp		eax, [esi+ebx]		; Vendo se na Posição 0 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 0
+	add		ebx, 12				; Deixando o EBX na posição certa
+
+	cmp		eax, [esi+ebx]		;Vendo se na Posição 3 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 3
+	add		ebx, 12	
+
+	cmp		eax, [esi+ebx]		;Vendo se na Posição 6 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 6
+
+	; Verificação se Todas as Posições tem a mesma Peça
+	cmp		ecx, edx			;Vendo se a Posição 0 3 tem peças =
+	jne		_verificaColuna2	;Peças !=
+
+	cmp		ecx, eax			;Vendo se a Posição 0 6 tem peças =
+	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
+
+_verificaColuna2:
+
+	; Inicializando Registradores para fazer a comparação
+	mov		eax, 0
+	mov		ebx, 4				;Número na Posição 1
+	mov		ecx, 0
+	mov		edx, 0
+	mov		esi, tabuleiro
+
+	; Função para verificar a Primeira Coluna (1 4 7)
+	; Verificação de Todas as Posições tem peça
+	cmp		eax, [esi+ebx]		; Vendo se na Posição 1 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 1
+	add		ebx, 12				; Deixando o EBX na posição certa
+
+	cmp		eax, [esi+ebx]		;Vendo se na Posição 4 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 43
+	add		ebx, 12	
+
+	cmp		eax, [esi+ebx]		;Vendo se na Posição 7 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 7
+
+	; Verificação se Todas as Posições tem a mesma Peça
+	cmp		ecx, edx			;Vendo se a Posição 1 4 tem peças =
+	jne		_verificaColuna3	;Peças !=
+
+	cmp		ecx, eax			;Vendo se a Posição 1 7 tem peças =
+	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
+
+_verificaColuna3:
+	; Inicializando Registradores para fazer a comparação
+	mov		eax, 0
+	mov		ebx, 8				;Número na Posição 2
+	mov		ecx, 0
+	mov		edx, 0
+	mov		esi, tabuleiro
+
+	; Função para verificar a Primeira Coluna (2 5 8)
+	; Verificação de Todas as Posições tem peça
+	cmp		eax, [esi+ebx]		; Vendo se na Posição 2 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 2
+	add		ebx, 12				; Deixando o EBX na posição certa
+
+	cmp		eax, [esi+ebx]		;Vendo se na Posição 5 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 5
+	add		ebx, 12	
+
+	cmp		eax, [esi+ebx]		;Vendo se na Posição 8 não tem peça
+	je		_continuaJogo		; Posição Vazia
+	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 8
+
+	; Verificação se Todas as Posições tem a mesma Peça
+	cmp		ecx, edx			;Vendo se a Posição 2 5 tem peças =
+	jne		_continuaJogo	;Peças !=
+
+	cmp		ecx, eax			;Vendo se a Posição 2 8 tem peças =
+	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
+
+; _verificaLinha1:
+; _verificaLinha2:
+; _verificaLinha3:
+
+_campeao:
+
+	call	print_nl
+	mov		eax,	deuCampeao
+	call	print_string
+	
+	mov		eax,	ecx
+	call	print_int
+	call	print_nl
+	call	print_nl
+
+	mov		eax,	0
+	mov		[flag],	eax
+
+	jmp		_apresentaTabuleiro
 ; ----------------------------------------------------
 
 _verificaFlag: ; Função para saber para onde tenho que ir
@@ -306,6 +452,7 @@ _verificaFlag: ; Função para saber para onde tenho que ir
 	; Flag	=	3	=>	_inicia_tabuleiro
 	; Flag	=	4	=>	_intro
 	; Flag	=	5	=>	_verJogo
+	; Flag	=	5	=>	_verificaColuna1
 	
 	mov		eax, 0
 	cmp		[flag], eax
@@ -327,6 +474,10 @@ _verificaFlag: ; Função para saber para onde tenho que ir
 	cmp		[flag], eax
 	je		_intro
 
-	mov		eax, 5
+	; mov		eax, 5
+	; cmp		[flag], eax
+	; je		_verJogo
+	
+	mov		eax, 6
 	cmp		[flag], eax
-	je		_verJogo
+	je		_verificaColuna1
