@@ -37,9 +37,10 @@ deuVelha	db	" DEU VELHA NINGUEM GANHOU :(", 0
 
 segment .bss
 ; Dados são inicializados, são colocados, no segment .bss
-flag			resd 1 ; Variavel para controle de subprogramas.
-posicao			resd 1 ; Variavel para escolha da posicao do jogador
-jogadorJogando	resd 1 ; Variavel para controle dos Jogadores
+flag					resd 1 ; Variavel para controle de subprogramas.
+posicao					resd 1 ; Variavel para escolha da posicao do jogador
+jogadorJogando			resd 1 ; Variavel para controle dos Jogadores
+continuarVerificacao	resd 1 ; Variavel para controle das Verificações
 
 segment .text
 		global _asm_main	
@@ -89,36 +90,42 @@ _intro:
 ; Jogar -------------------------------------
 _jogador1:
 	call	print_nl
-	mov		eax, jogador1	; Movendo Variavel para o regfistrador EAx
-	call	print_string	; Apresentando para o usuário 
+	mov		eax,		jogador1	; Movendo Variavel para o regfistrador EAx
+	call	print_string			; Apresentando para o usuário 
 	
-	call	read_int		; Lendo uma entrada
-	dec		eax				; Subtraindo 1 da posição digitada
-	mov		[posicao], eax	; Movendo a entrada para uma variavel
+	call	read_int				; Lendo uma entrada
+	dec		eax						; Subtraindo 1 da posição digitada
+	mov		[posicao],	eax			; Movendo a entrada para uma variavel
 
 	; call	print_int
 
-	mov 	eax, 1 ; Flag	=	1	=>	_jogador1
-	mov 	[flag], eax ; Flag recebe 1.
+	mov 	eax,		1 			; Flag	=	1	=>	_jogador1
+	mov 	[flag],		eax 		; Flag recebe 1.
+
+	mov		eax,		1			; ContinuarVerificacao = 1 =>	Verificar Linha 3
+	mov 	[continuarVerificacao],	eax	
 
 	jmp		_verificarEntrada	;Pular Para o subPrograma que verifica se a enrtada está correta
 
 
 _jogador2:
 	call	print_nl
-	mov		eax, jogador2	; Movendo Variavel para o regfistrador EAx
-	call	print_string	; Apresentando para o usuário 
+	mov		eax,		jogador2	; Movendo Variavel para o regfistrador EAx
+	call	print_string			; Apresentando para o usuário 
 	
-	call	read_int		; Lendo uma entrada
-	dec		eax				; Subtraindo 1 da posição digitada
-	mov		[posicao], eax	; Movendo a entrada para uma variavel
+	call	read_int				; Lendo uma entrada
+	dec		eax						; Subtraindo 1 da posição digitada
+	mov		[posicao],	eax			; Movendo a entrada para uma variavel
 	
 	; call	print_int	
 	
-	mov 	eax, 2 ; Flag	=	2	=>	_jogador2
-	mov 	[flag], eax ; Flag recebe 2.
+	mov 	eax,		2 			; Flag	=	2	=>	_jogador2
+	mov 	[flag], eax 			; Flag recebe 2.
+
+	mov		eax,		1			; ContinuarVerificacao = 1 =>	Verificar Linha 3
+	mov 	[continuarVerificacao],	eax	
 	
-	jmp		_verificarEntrada	;Pular Para o subPrograma que verifica se a enrtada está correta
+	jmp		_verificarEntrada		;Pular Para o subPrograma que verifica se a enrtada está correta
 
 
 ; ----------------- Fim ------------------------------		
@@ -316,6 +323,13 @@ _aleteraJogador2:
 
 _continuaJogo:
 
+	;Confirmar Verificação
+	; ContinuarVerificacao = 1 => Linha 3
+	mov		eax,	1
+	cmp		[continuarVerificacao], eax
+	je		_verificaLinha3
+
+	;Continuar Jogo
 	mov		eax,	4
 	mov		[flag],	eax
 
@@ -392,14 +406,87 @@ _verificaColuna3:
 
 	; Verificação se Todas as Posições tem a mesma Peça
 	cmp		ecx, edx			;Vendo se a Posição 2 5 tem peças =
-	jne		_verificaVelha	;Peças !=
+	jne		_verificaLinha1	;Peças !=
 
 	cmp		ecx, eax			;Vendo se a Posição 2 8 tem peças =
 	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
 
-; _verificaLinha1:
-; _verificaLinha2:
-; _verificaLinha3:
+_verificaLinha1:
+	; Inicializando Registradores para fazer a comparação
+	mov		eax, 0
+	mov		ebx, 0				;Número na Posição 0
+	mov		ecx, 0
+	mov		edx, 0
+	mov		esi, tabuleiro
+
+	; Função para verificar a Primeira Linha (0 1 2)
+	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 0
+	add		ebx, 4				; Deixando o EBX na proxima posição
+
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 1
+	add		ebx, 4				; Deixando o EBX na proxima posição
+
+	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 82
+
+	; Verificação se Todas as Posições tem a mesma Peça
+	cmp		ecx, edx			;Vendo se a Posição 0 1 tem peças =
+	jne		_verificaLinha2		;Peças !=
+
+	cmp		ecx, eax			;Vendo se a Posição 0 2 tem peças =
+	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
+
+_verificaLinha2:
+	; Inicializando Registradores para fazer a comparação
+	mov		eax, 0
+	mov		ebx, 12				;Número na Posição 3
+	mov		ecx, 0
+	mov		edx, 0
+	mov		esi, tabuleiro
+
+	; Função para verificar a Segunda Linha (3 4 5)
+	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 3
+	add		ebx, 4				; Deixando o EBX na proxima posição
+
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 4
+	add		ebx, 4				; Deixando o EBX na proxima posição
+
+	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 5
+
+	; Verificação se Todas as Posições tem a mesma Peça
+	cmp		ecx, edx			;Vendo se a Posição 3 4 tem peças =
+	jne		_verificaLinha3		;Peças !=
+
+	cmp		ecx, eax			;Vendo se a Posição 3 5 tem peças =
+	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
+
+_verificaLinha3:
+
+	;Controle de Verificação
+	mov		eax,	0
+	mov		[continuarVerificacao],	eax
+
+	; Inicializando Registradores para fazer a comparação
+	mov		eax, 0
+	mov		ebx, 24				;Número na Posição 6
+	mov		ecx, 0
+	mov		edx, 0
+	mov		esi, tabuleiro
+
+	; Função para verificar a Terceira Linha (6 7 9)
+	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 6
+	add		ebx, 4				; Deixando o EBX na proxima posição
+
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 7
+	add		ebx, 4				; Deixando o EBX na proxima posição
+
+	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 8
+
+	; Verificação se Todas as Posições tem a mesma Peça
+	cmp		ecx, edx			;Vendo se a Posição 6 7 tem peças =
+	jne		_verificaVelha		;Peças !=
+
+	cmp		ecx, eax			;Vendo se a Posição 6 8 tem peças =
+	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
 
 _verificaVelha:
 	mov		eax, 0
@@ -426,7 +513,7 @@ _deuVelha:
 	call	print_string
 	call	print_nl
 	call	print_nl
-	
+
 	mov 	eax,	0
 	mov		[flag],	eax
 
