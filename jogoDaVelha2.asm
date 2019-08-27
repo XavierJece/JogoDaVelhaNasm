@@ -23,13 +23,14 @@
 segment  .data
 ; aqui os dados inicializados são colocados no segment .data
 intro		db " Esse é um jogo da memoria feito em Nasm, para testar o conhecimento", 0
-jogador1   	db "Jogador 1 Digite posição que deseja jogar: ", 0       ; don't forget nul terminator
-jogador2   	db "Jogador 2 Digite posição que deseja jogar: ", 0       ; don't forget nul terminator
+jogador1   	db "Jogador 1 Digite posicao que deseja jogar: ", 0       ; don't forget nul terminator
+jogador2   	db "Jogador 2 Digite posicao que deseja jogar: ", 0       ; don't forget nul terminator
 posicoes	db "POSICOES: ", 0
 barra 	 	db "| ", 0
 espaco 	 	db " ", 0
 tracos 	 	db "|---|---|---|", 0
-tabuleiro  TIMES 10 dd 0  ; Declaração do vetor 
+tabuleiro	TIMES 10 dd 0  ; Declaração do vetor 
+errou	 	db  " Voce digitou errado, tente novamente!", 0
 
 segment .bss
 ; Dados são inicializados, são colocados, no segment .bss
@@ -52,8 +53,8 @@ _inicia_tabuleiro:
 		mov 	edx, 0 ; contador do WHILE.
 		mov		ebx, 0 ; Indice do vetor.
 		
-		mov 	eax, 2 ; Flag	=	2	=>	_intro
-		mov 	[flag], eax ; Flag recebe 2.
+		mov 	eax, 4 ; Flag	=	4	=>	_intro
+		mov 	[flag], eax ; Flag recebe 4.
 		
 _whileMatrixOne: 	; Loop para receber os valores da  primeira matriz.
 		inc 	edx  ; Incrementa contador
@@ -73,29 +74,58 @@ _whileMatrixOne: 	; Loop para receber os valores da  primeira matriz.
 
 ;Apresentando a INTRO -------------------------------------
 _intro:
+
 	mov		eax, posicoes
 	call	print_string
 	call	print_nl
 
-	mov 	eax, 3 ; Flag	=	3	=>	_terminou
-	mov 	[flag], eax ; Flag recebe 3.
+	mov 	eax, 1 ; Flag	=	1	=>	_jogador1
+	mov 	[flag], eax ; Flag recebe 1.
 
 	jmp		_apresentacaoPosicao
 
 ; Jogar -------------------------------------
+_jogador1:
+	mov		eax, jogador1	; Movendo Variavel para o regfistrador EAx
+	call	print_string	; Apresentando para o usuário 
+	
+	call	read_int		; Lendo uma entrada
+	dec		eax				; Subtraindo 1 da posição digitada
+	mov		[posicao], eax	; Movendo a entrada para uma variavel
+
+	; call	print_int
+
+	mov 	eax, 1 ; Flag	=	1	=>	_jogador1
+	mov 	[flag], eax ; Flag recebe 1.
+
+	jmp		_verificarEntrada	;Pular Para o subPrograma que verifica se a enrtada está correta
+
+
+_jogador2:
+	mov		eax, jogador2	; Movendo Variavel para o regfistrador EAx
+	call	print_string	; Apresentando para o usuário 
+	
+	call	read_int		; Lendo uma entrada
+	dec		eax				; Subtraindo 1 da posição digitada
+	mov		[posicao], eax	; Movendo a entrada para uma variavel
+	
+	; call	print_int	
+	
+	mov 	eax, 2 ; Flag	=	2	=>	_jogador2
+	mov 	[flag], eax ; Flag recebe 2.
+	
+	jmp		_verificarEntrada	;Pular Para o subPrograma que verifica se a enrtada está correta
+
 
 ; ----------------- Fim ------------------------------		
 _terminou:	; Funcao para ser chamada no fim da apresentacao do resultado para finalizar o programa.
-		call 	print_nl
-		
-		
-		
-		
+	call 	print_nl
+
 ; Não modifique o código antes ou após este comentário
-		popa
-		mov 	eax, 0 ;return back to C
-		leave
-		ret 
+	popa
+	mov 	eax, 0 ;return back to C
+	leave
+	ret 
 
 ;----------------Sub Programas-----------------------
 
@@ -104,109 +134,178 @@ _terminou:	; Funcao para ser chamada no fim da apresentacao do resultado para fi
 
 _apresentaTabuleiro: ; Sub programa de apresentacao das matrizes.
 		
-		mov 	ecx, 0 ; ECX contador para o loop.
-		mov		ebx, 0 ; EBX sera usado como indice.
-		mov 	edx, 0 ; EDX sera usado para controlar quando pular linha para a apresentacao da matriz.
-		
-		mov 	eax, tracos 
-		call 	print_string 		  		; Imprime tracos.	
-		call 	print_nl
+	mov 	ecx, 0 ; ECX contador para o loop.
+	mov		ebx, 0 ; EBX sera usado como indice.
+	mov 	edx, 0 ; EDX sera usado para controlar quando pular linha para a apresentacao da matriz.
+	
+	mov 	eax, tracos 
+	call 	print_string 		  		; Imprime tracos.	
+	call 	print_nl
 
 _whileApresentaTabuleiro: 	; Loop para receber os valores da  primeira matriz.
 		
-		inc 	ecx 
-		inc 	edx
-		
-		mov 	eax, barra 
-		call 	print_string ; Imprime barra.
-		
-		mov		eax, [esi+ebx]  ; Move o valor do vetor que o ESI esta apontando para o registrador EAX.
-		call 	print_int  ; Imprime o valor.
-		
-		mov 	eax, espaco ; Imprime espaco.
-		call 	print_string
-		
-		add 	ebx, 4  ; Adiciona 4 para o ebx, posteriormente fazendo que o ESI aponte para a proxima posicao do vetor.	
+	inc 	ecx 
+	inc 	edx
+	
+	mov 	eax, barra 
+	call 	print_string ; Imprime barra.
+	
+	mov		eax, [esi+ebx]  ; Move o valor do vetor que o ESI esta apontando para o registrador EAX.
+	call 	print_int  ; Imprime o valor.
+	
+	mov 	eax, espaco ; Imprime espaco.
+	call 	print_string
+	
+	add 	ebx, 4  ; Adiciona 4 para o ebx, posteriormente fazendo que o ESI aponte para a proxima posicao do vetor.	
 
-		cmp		edx, 3 	   ; Compara se EDX e igual a 3.
-		jge		_pulaLinha ; Se sim, ir para o sub programa _pulaLinha.
+	cmp		edx, 3 	   ; Compara se EDX e igual a 3.
+	jge		_pulaLinha ; Se sim, ir para o sub programa _pulaLinha.
 
-		jmp 	_whileApresentaTabuleiro 
+	jmp 	_whileApresentaTabuleiro 
 
 _pulaLinha: ; Sub programa para pular linha na apresentacao da matriz
 
-		mov 	eax, barra 
-		call 	print_string ; Imprime barra.
+	mov 	eax, barra 
+	call 	print_string ; Imprime barra.
 
-		mov 	edx, 0 				  ;Zerando o EDX novamente para continuar sendo contado ate 3.
-		call 	print_nl
-		
-		mov 	eax, tracos 
-		call 	print_string 		  		; Imprime tracos.	
-		call 	print_nl 			  		; pula linha.
-		
-		cmp		ecx, 9 	   ; Compara se ECX e igual a 9.
-		jge		_verificaFlag ; Se sim, encerrar programa
+	mov 	edx, 0 				  ;Zerando o EDX novamente para continuar sendo contado ate 3.
+	call 	print_nl
+	
+	mov 	eax, tracos 
+	call 	print_string 		  		; Imprime tracos.	
+	call 	print_nl 			  		; pula linha.
+	
+	cmp		ecx, 9 	   ; Compara se ECX e igual a 9.
+	jge		_verificaFlag ; Se sim, encerrar programa
 
-		jmp 	_whileApresentaTabuleiro 	; Volta para o sub programa _compara.
+	jmp 	_whileApresentaTabuleiro 	; Volta para o sub programa _compara.
 
 ; ----------------Sub Programas Apresentação Posição------------------------
 
 _apresentacaoPosicao: ; Sub programa de apresentacao das matrizes.
 		
-		mov 	ecx, 0 ; ECX contador para o loop.
-		mov 	edx, 0 ; EDX sera usado para controlar quando pular linha para a apresentacao da matriz.
+	mov 	ecx, 0 ; ECX contador para o loop.
+	mov 	edx, 0 ; EDX sera usado para controlar quando pular linha para a apresentacao da matriz.
 
-		mov 	eax, tracos 
-		call 	print_string 		  		; Imprime tracos.	
-		call 	print_nl
+	mov 	eax, tracos 
+	call 	print_string 		  		; Imprime tracos.	
+	call 	print_nl
 
 _whileApresentaPosicao: 	; Loop para receber os valores da  primeira matriz.
 		
-		inc 	ecx 
-		inc 	edx
-		
-		mov 	eax, barra 
-		call 	print_string ; Imprime barra.
-		
-		mov		eax, ecx  ; Move o valor do vetor que o ecx esta apontando para o registrador EAX.
-		call 	print_int  ; Imprime o valor.
-		
-		mov 	eax, espaco ; Imprime espaco.
-		call 	print_string
+	inc 	ecx 
+	inc 	edx
 	
-		cmp		edx, 3 	   ; Compara se EDX e igual a 3.
-		jge		_pulaLinhaP ; Se sim, ir para o sub programa _pulaLinha.
+	mov 	eax, barra 
+	call 	print_string ; Imprime barra.
+	
+	mov		eax, ecx  ; Move o valor do vetor que o ecx esta apontando para o registrador EAX.
+	call 	print_int  ; Imprime o valor.
+	
+	mov 	eax, espaco ; Imprime espaco.
+	call 	print_string
 
-		jmp 	_whileApresentaPosicao
+	cmp		edx, 3 	   ; Compara se EDX e igual a 3.
+	jge		_pulaLinhaP ; Se sim, ir para o sub programa _pulaLinha.
+
+	jmp 	_whileApresentaPosicao
 
 _pulaLinhaP: ; Sub programa para pular linha na apresentacao da matriz
 
-		mov 	eax, barra 
-		call 	print_string ; Imprime barra.
+	mov 	eax, barra 
+	call 	print_string ; Imprime barra.
 
-		mov 	edx, 0 				  ;Zerando o EDX novamente para continuar sendo contado ate 3.
-		call 	print_nl
-		
-		mov 	eax, tracos 
-		call 	print_string 		  		; Imprime tracos.	
-		call 	print_nl 			  		; pula linha.
-		
-		cmp		ecx, 9 	   ; Compara se EDX e igual a 3.
-		jge		_verificaFlag ; Se sim, encerrar programa
+	mov 	edx, 0 				  ;Zerando o EDX novamente para continuar sendo contado ate 3.
+	call 	print_nl
+	
+	mov 	eax, tracos 
+	call 	print_string 		  		; Imprime tracos.	
+	call 	print_nl 			  		; pula linha.
+	
+	cmp		ecx, 9 	   ; Compara se EDX e igual a 3.
+	jge		_verificaFlag ; Se sim, encerrar programa
 
-		jmp 	_whileApresentaPosicao 	; Volta para o sub programa _compara.
+	jmp 	_whileApresentaPosicao 	; Volta para o sub programa _compara.
+
+; ----------------Sub Programas para verificar se a posição está correta ------------------------
+_verificarEntrada: 
+
+	; Verificando ver jogo
+	mov		eax,	9
+	cmp		eax,	[posicao]
+	je		_verJogo
+
+	; Verificando se a posição é menor a Zero
+	mov		eax,	0
+	cmp		[posicao],	eax
+	jl		_apresentarError
+
+	; Verificando se a posição é mais ou igual a NOVE
+	mov		eax,	9
+	cmp		[posicao],	eax
+	jge		_apresentarError
+	
+	; Verificando se a posição já está sendo usada
+	mov 	esi, tabuleiro          ;Copia a tabuleiro um para o Registrador apontador ESI.
+	
+	mov		eax,	[posicao]    
+	mov		ebx,	4
+	mul		ebx
+	mov		ebx,	eax
+
+	mov 	ecx,	1
+	mov		eax,	[esi+ebx]
+	call	print_int
+	cmp 	eax,	ecx
+	jge		_apresentarError
+	jmp		_addPeca
+
+_apresentarError:
+	mov		eax, errou
+	call	print_string
+	call	print_nl
+
+	jmp		_verificaFlag
+	
+_addPeca:
+
+	mov		eax,	[flag]
+	mov		[esi+ebx],	eax
+
+	cmp		eax, 1
+	je		_aleteraJogador1
+
+	cmp		eax, 2
+	je		_aleteraJogador2
+	
+_aleteraJogador1:
+	mov		eax,	2
+	mov		[flag], eax
+
+	jmp		_verificaFlag
+
+_aleteraJogador2:
+	mov		eax,	1
+	mov		[flag], eax
+
+	jmp		_verificaFlag
+
+_verJogo:
+	; mov		eax,	0
+	; mov		[flag], eax
+
+	jmp		_apresentaTabuleiro
 
 ; ----------------------------------------------------
 
 _verificaFlag: ; Função para saber para onde tenho que ir
 
 	; Flag	=	0	=>	_terminou
-	; Flag	=	1	=>	_inicia_tabuleiro
-	; Flag	=	2	=>	_intro
-	; Flag	=	3	=>	_jogador1
-	; Flag	=	4	=>	_jogador2
-	; Flag	=	5	=>	_
+	; Flag	=	1	=>	_jogador1 
+	; Flag	=	2	=>	_jogador2
+	; Flag	=	3	=>	_inicia_tabuleiro
+	; Flag	=	4	=>	_intro
+	; Flag	=	5	=>	_verJogo
 	
 	mov		eax, 0
 	cmp		[flag], eax
@@ -214,16 +313,20 @@ _verificaFlag: ; Função para saber para onde tenho que ir
 	
 	mov		eax, 1
 	cmp		[flag], eax
-	je		_inicia_tabuleiro
+	je		_jogador1
 
 	mov		eax, 2
 	cmp		[flag], eax
-	je		_intro
+	je		_jogador2
 
 	mov		eax, 3
 	cmp		[flag], eax
-	je		_jogador1
+	je		_inicia_tabuleiro
 
 	mov		eax, 4
 	cmp		[flag], eax
-	je		_jogador2
+	je		_intro
+
+	mov		eax, 5
+	cmp		[flag], eax
+	je		_verJogo
