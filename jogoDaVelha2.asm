@@ -483,9 +483,67 @@ _verificaLinha3:
 
 	; Verificação se Todas as Posições tem a mesma Peça
 	cmp		ecx, edx			;Vendo se a Posição 6 7 tem peças =
-	jne		_verificaVelha		;Peças !=
+	jne		_verificaDiagonalPrincipal		;Peças !=
 
 	cmp		ecx, eax			;Vendo se a Posição 6 8 tem peças =
+	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
+
+_verificaDiagonalPrincipal:
+
+	;Controle de Verificação
+	mov		eax,	0
+	mov		[continuarVerificacao],	eax
+
+	; Inicializando Registradores para fazer a comparação
+	mov		eax, 0
+	mov		ebx, 0				;Número na Posição 0
+	mov		ecx, 0
+	mov		edx, 0
+	mov		esi, tabuleiro
+
+	; Função para verificar a Diagonal Principal (0 4 8)
+	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 0
+	add		ebx, 16				; Deixando o EBX na proxima posição
+
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 4
+	add		ebx, 16				; Deixando o EBX na proxima posição
+
+	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 8
+
+	; Verificação se Todas as Posições tem a mesma Peça
+	cmp		ecx, edx			;Vendo se a Posição 0 4 tem peças =
+	jne		_verificaDiagonalSecundaria		;Peças !=
+
+	cmp		ecx, eax			;Vendo se a Posição 0 8 tem peças =
+	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
+
+_verificaDiagonalSecundaria:
+
+	;Controle de Verificação
+	mov		eax,	0
+	mov		[continuarVerificacao],	eax
+
+	; Inicializando Registradores para fazer a comparação
+	mov		eax, 0
+	mov		ebx, 8				;Número na Posição 2
+	mov		ecx, 0
+	mov		edx, 0
+	mov		esi, tabuleiro
+
+	; Função para verificar a Diagonal Secundaria (2 4 6)
+	mov		ecx, [esi+ebx]		; O ECX tem a peça Posição 2
+	add		ebx, 8				; Deixando o EBX na proxima posição
+
+	mov		edx, [esi+ebx]		; O EDX tem a peça Posição 4
+	add		ebx, 8				; Deixando o EBX na proxima posição
+
+	mov		eax, [esi+ebx]		; O ADX tem a peça Posição 6
+
+	; Verificação se Todas as Posições tem a mesma Peça
+	cmp		ecx, edx			;Vendo se a Posição 2 4 tem peças =
+	jne		_verificaVelha		;Peças !=
+
+	cmp		ecx, eax			;Vendo se a Posição 2 6 tem peças =
 	je		_campeao			;Peças = (Coluna toda igual, alguem ganhou)
 
 _verificaVelha:
